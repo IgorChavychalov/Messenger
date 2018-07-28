@@ -1,0 +1,62 @@
+DEBUG  [2018-07-28 00:07:54,538]  server.py  [223]  bind:  __________________З А П У С К ___ С Е Р В Е Р А ___________________________
+INFO  [2018-07-28 00:07:54,539]  server.py  [224]  bind:  Запуск сервера с адрессом localhost:8888
+INFO  [2018-07-28 00:08:15,819]  server.py  [234]  listen:  подключение с 127.0.0.1:13536
+INFO  [2018-07-28 00:08:15,820]  server.py  [133]  connect_protocol:  отправленна проба на 127.0.0.1:13536 {'action': 'probe', 'time': '2018-07-28 00:08:15'}
+INFO  [2018-07-28 00:08:15,820]  server.py  [136]  connect_protocol:  получен презентс-сообщение от 127.0.0.1:13536  {'action': 'presence', 'time': '2018-07-28 00:08:15', 'type': 'status', 'account_name': 'Пишуший', 'password': '2'}
+ERROR  [2018-07-28 00:08:15,825]  server.py  [32]  save_name_from_presentce:  пользователь Пишуший уже добавлен
+INFO  [2018-07-28 00:08:15,941]  server.py  [40]  save_history:  добавлена новый запись в таблицу History: Пишуший
+INFO  [2018-07-28 00:08:15,941]  server.py  [142]  connect_protocol:  отправлен ответ на презентс 127.0.0.1:13536  {'response': 200, 'time': '2018-07-28 00:08:15', 'alert': 'Доступ разрешён'}
+INFO  [2018-07-28 00:08:16,142]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'get_contacts', 'time': '2018-07-28 00:08:16'}
+INFO  [2018-07-28 00:08:16,142]  server.py  [185]  write_responses:  получен запрос на список контактов от сокета <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13536)>
+INFO  [2018-07-28 00:08:16,149]  server.py  [74]  get_contacts_list:  получен список контактов для: Пишуший
+INFO  [2018-07-28 00:08:16,150]  server.py  [190]  write_responses:  отправлен ответ на запрос {'action': 'get_contacts', 'time': '2018-07-28 00:08:16'} на сокет <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13536)>
+INFO  [2018-07-28 00:08:28,368]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'msg', 'time': '2018-07-28 00:08:28', 'to': 'Пишуший', 'from': 'Пишуший', 'message': 'yfjhyfjhfy'}
+INFO  [2018-07-28 00:08:30,368]  server.py  [154]  read_requests:  Клиент 352 ('127.0.0.1', 13536) отключился
+INFO  [2018-07-28 00:09:09,839]  server.py  [234]  listen:  подключение с 127.0.0.1:13870
+INFO  [2018-07-28 00:09:09,839]  server.py  [133]  connect_protocol:  отправленна проба на 127.0.0.1:13870 {'action': 'probe', 'time': '2018-07-28 00:09:09'}
+INFO  [2018-07-28 00:09:09,840]  server.py  [136]  connect_protocol:  получен презентс-сообщение от 127.0.0.1:13870  {'action': 'presence', 'time': '2018-07-28 00:09:09', 'type': 'status', 'account_name': 'Пишуший', 'password': '2'}
+ERROR  [2018-07-28 00:09:09,843]  server.py  [32]  save_name_from_presentce:  пользователь Пишуший уже добавлен
+INFO  [2018-07-28 00:09:09,961]  server.py  [40]  save_history:  добавлена новый запись в таблицу History: Пишуший
+INFO  [2018-07-28 00:09:09,961]  server.py  [142]  connect_protocol:  отправлен ответ на презентс 127.0.0.1:13870  {'response': 200, 'time': '2018-07-28 00:09:09', 'alert': 'Доступ разрешён'}
+INFO  [2018-07-28 00:09:10,162]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'get_contacts', 'time': '2018-07-28 00:09:09'}
+INFO  [2018-07-28 00:09:10,162]  server.py  [185]  write_responses:  получен запрос на список контактов от сокета <socket.socket fd=136, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13870)>
+INFO  [2018-07-28 00:09:10,169]  server.py  [74]  get_contacts_list:  получен список контактов для: Пишуший
+INFO  [2018-07-28 00:09:10,169]  server.py  [190]  write_responses:  отправлен ответ на запрос {'action': 'get_contacts', 'time': '2018-07-28 00:09:09'} на сокет <socket.socket fd=136, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13870)>
+INFO  [2018-07-28 00:09:12,969]  server.py  [154]  read_requests:  Клиент 136 ('127.0.0.1', 13870) отключился
+DEBUG  [2018-07-28 00:09:24,813]  server.py  [223]  bind:  __________________З А П У С К ___ С Е Р В Е Р А ___________________________
+INFO  [2018-07-28 00:09:24,814]  server.py  [224]  bind:  Запуск сервера с адрессом localhost:8888
+INFO  [2018-07-28 00:09:29,072]  server.py  [234]  listen:  подключение с 127.0.0.1:13976
+INFO  [2018-07-28 00:09:29,073]  server.py  [133]  connect_protocol:  отправленна проба на 127.0.0.1:13976 {'action': 'probe', 'time': '2018-07-28 00:09:29'}
+INFO  [2018-07-28 00:09:29,073]  server.py  [136]  connect_protocol:  получен презентс-сообщение от 127.0.0.1:13976  {'action': 'presence', 'time': '2018-07-28 00:09:29', 'type': 'status', 'account_name': 'Пишуший', 'password': '2'}
+ERROR  [2018-07-28 00:09:29,077]  server.py  [32]  save_name_from_presentce:  пользователь Пишуший уже добавлен
+INFO  [2018-07-28 00:09:29,192]  server.py  [40]  save_history:  добавлена новый запись в таблицу History: Пишуший
+INFO  [2018-07-28 00:09:29,192]  server.py  [142]  connect_protocol:  отправлен ответ на презентс 127.0.0.1:13976  {'response': 200, 'time': '2018-07-28 00:09:29', 'alert': 'Доступ разрешён'}
+INFO  [2018-07-28 00:09:29,392]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'get_contacts', 'time': '2018-07-28 00:09:29'}
+INFO  [2018-07-28 00:09:29,392]  server.py  [185]  write_responses:  получен запрос на список контактов от сокета <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13976)>
+INFO  [2018-07-28 00:09:29,399]  server.py  [74]  get_contacts_list:  получен список контактов для: Пишуший
+INFO  [2018-07-28 00:09:29,399]  server.py  [190]  write_responses:  отправлен ответ на запрос {'action': 'get_contacts', 'time': '2018-07-28 00:09:29'} на сокет <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 13976)>
+INFO  [2018-07-28 00:09:37,804]  server.py  [154]  read_requests:  Клиент 352 ('127.0.0.1', 13976) отключился
+DEBUG  [2018-07-28 14:54:14,008]  server.py  [223]  bind:  __________________З А П У С К ___ С Е Р В Е Р А ___________________________
+INFO  [2018-07-28 14:54:14,008]  server.py  [224]  bind:  Запуск сервера с адрессом localhost:8888
+INFO  [2018-07-28 14:54:18,411]  server.py  [234]  listen:  подключение с 127.0.0.1:5156
+INFO  [2018-07-28 14:54:18,412]  server.py  [133]  connect_protocol:  отправленна проба на 127.0.0.1:5156 {'action': 'probe', 'time': '2018-07-28 14:54:18'}
+INFO  [2018-07-28 14:54:18,413]  server.py  [136]  connect_protocol:  получен презентс-сообщение от 127.0.0.1:5156  {'action': 'presence', 'time': '2018-07-28 14:54:18', 'type': 'status', 'account_name': 'Читающий', 'password': '2'}
+ERROR  [2018-07-28 14:54:18,417]  server.py  [32]  save_name_from_presentce:  пользователь Читающий уже добавлен
+INFO  [2018-07-28 14:54:18,539]  server.py  [40]  save_history:  добавлена новый запись в таблицу History: Читающий
+INFO  [2018-07-28 14:54:18,539]  server.py  [142]  connect_protocol:  отправлен ответ на презентс 127.0.0.1:5156  {'response': 200, 'time': '2018-07-28 14:54:18', 'alert': 'Доступ разрешён'}
+INFO  [2018-07-28 14:54:23,571]  server.py  [234]  listen:  подключение с 127.0.0.1:5185
+INFO  [2018-07-28 14:54:23,571]  server.py  [133]  connect_protocol:  отправленна проба на 127.0.0.1:5185 {'action': 'probe', 'time': '2018-07-28 14:54:23'}
+INFO  [2018-07-28 14:54:23,572]  server.py  [136]  connect_protocol:  получен презентс-сообщение от 127.0.0.1:5185  {'action': 'presence', 'time': '2018-07-28 14:54:23', 'type': 'status', 'account_name': 'Пишуший', 'password': '2'}
+ERROR  [2018-07-28 14:54:23,574]  server.py  [32]  save_name_from_presentce:  пользователь Пишуший уже добавлен
+INFO  [2018-07-28 14:54:23,665]  server.py  [40]  save_history:  добавлена новый запись в таблицу History: Пишуший
+INFO  [2018-07-28 14:54:23,666]  server.py  [142]  connect_protocol:  отправлен ответ на презентс 127.0.0.1:5185  {'response': 200, 'time': '2018-07-28 14:54:23', 'alert': 'Доступ разрешён'}
+INFO  [2018-07-28 14:54:23,866]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'get_contacts', 'time': '2018-07-28 14:54:23'}
+INFO  [2018-07-28 14:54:23,866]  server.py  [185]  write_responses:  получен запрос на список контактов от сокета <socket.socket fd=336, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 5185)>
+INFO  [2018-07-28 14:54:23,873]  server.py  [74]  get_contacts_list:  получен список контактов для: Пишуший
+INFO  [2018-07-28 14:54:23,873]  server.py  [190]  write_responses:  отправлен ответ на запрос {'action': 'get_contacts', 'time': '2018-07-28 14:54:23'} на сокет <socket.socket fd=336, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 5185)>
+INFO  [2018-07-28 14:54:31,680]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'msg', 'time': '2018-07-28 14:54:31', 'to': 'Пишуший', 'from': 'Пишуший', 'message': 'tghtdcghtdx'}
+INFO  [2018-07-28 14:54:31,680]  server.py  [171]  write_responses:  сообщение отправленно {'action': 'msg', 'time': '2018-07-28 14:54:31', 'to': 'Пишуший', 'from': 'Пишуший', 'message': 'tghtdcghtdx'} на сокет <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 5156)>
+INFO  [2018-07-28 14:54:33,480]  server.py  [150]  read_requests:  полученно входящее сообщение {'action': 'msg', 'time': '2018-07-28 14:54:33', 'to': 'Пишуший', 'from': 'Пишуший', 'message': 'htxdhtdhtd'}
+INFO  [2018-07-28 14:54:33,480]  server.py  [171]  write_responses:  сообщение отправленно {'action': 'msg', 'time': '2018-07-28 14:54:33', 'to': 'Пишуший', 'from': 'Пишуший', 'message': 'htxdhtdhtd'} на сокет <socket.socket fd=352, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8888), raddr=('127.0.0.1', 5156)>
+INFO  [2018-07-28 14:54:36,880]  server.py  [154]  read_requests:  Клиент 336 ('127.0.0.1', 5185) отключился
+INFO  [2018-07-28 14:54:40,162]  server.py  [154]  read_requests:  Клиент 352 ('127.0.0.1', 5156) отключился
