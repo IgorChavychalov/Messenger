@@ -8,7 +8,7 @@ import settings
 import jim.JIM
 import jim.msg
 import sys
-import threading
+from threading import Thread
 
 logger = logging.getLogger('client')
 
@@ -21,6 +21,49 @@ def print_title(func):
         result = func(*args, **kwargs)
         return print(result)
     return wrap
+
+
+class Receiver:
+    """ Класс-получатель информации из сокета """
+    def __init__(self, sock):
+        self.sock = sock
+        self.is_alive = False
+
+    def process_message(self, msg):
+        pass
+
+    def recv(self):
+        self.is_alive = True
+        while True:
+            if not self.is_alive:
+                break
+            try:
+                data = jim.JIM.get_message(self.sock)
+                self.process_message(data)
+            except Exception as e:
+                print(e)
+
+    def stop(self):
+        self.is_alive = False
+
+
+class ConsoleReciever(Receiver):
+    """Консольный обработчик входящих сообщений"""
+
+    def process_message(self, message):
+        try:
+            action = message['action']
+            time_point = message['time']
+            t = time_point[11:]
+            if action == 'msg':
+                text = message['message']
+                name = message['from']
+                print(f'[{t} от {name}]: {text}')
+            elif action == 'quit':
+                name = message['account_name']
+                print(f'[{t} {name} покинул чат]')
+        except:
+            pass
 
 
 class User:
@@ -156,7 +199,7 @@ class User:
             print('-' * 10 + 'Список команд' + '-' * 10)
             text = input('[Q]-выход \n[A:name]-добавить контакт (для теста Смелый)'
                          ' \n[D:name]-удалить контакт (для теста Смелый)'
-                         ' \n[L]-получить список контатков'
+                          ' \n[L]-получить список контатков'
                          ' \n\nСообщение всем >>>')
             if text == 'Q':
                 # процедура выхода
@@ -190,23 +233,6 @@ class User:
                 jim.JIM.send_message(socket=self.socket, message=message)
             print()
 
-    def read_massage(self):
-        while True:
-            try:
-                message = jim.JIM.get_message(self.socket)
-                action = message['action']
-                time_point = message['time']
-                t = time_point[11:]
-                if action == 'msg':
-                    text = message['message']
-                    name = message['from']
-                    print(f'[{t} от {name}]: {text}')
-                elif action == 'quit':
-                    name = message['account_name']
-                    print(f'[{t} {name} покинул чат]')
-            except:
-                pass
-
 
 if __name__ == '__main__':
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -221,17 +247,13 @@ if __name__ == '__main__':
     except ValueError:
         print('Порт должен быть целым числом')
         sys.exit(0)
-    try:
-        mode = sys.argv[3]
-    except IndexError:
-        mode = 'w'
 
     user = User(login='Пишуший', password='2')
     user.connect(addr=addr, port=port)
 
-    if mode == 'w':
-        user.update_contacts()
-        user.show_contacts()
-        user.write_massage('всем')
-    elif mode == 'r':
-        user.read_massage()
+    listener = ConsoleReciever(user.socket)
+    th_listen = Thread(target=listener.recv)
+    th_listen.daemon = True
+    th_listen.start()
+    user.write_massage('всем')
+
