@@ -1,15 +1,18 @@
 import socket
 import logging
-import time
-import log.client_log_config
-
-# собственные модули
-import settings
-import jim.JIM
-import jim.msg
-import sys
 from threading import Thread
 from queue import Queue
+import sys
+import time
+
+# собственные модули
+import utils.settings
+from utils.JIM import get_message, send_message
+from utils.receivers import ConsoleReciever
+import utils.msg
+import log.client_log_config
+
+
 
 logger = logging.getLogger('client')
 
@@ -22,56 +25,6 @@ def print_title(func):
         result = func(*args, **kwargs)
         return print(result)
     return wrap
-
-
-class Receiver:
-    """ Класс-получатель информации из сокета """
-    def __init__(self, sock, request_queue):
-        self.request_queue = request_queue
-        self.sock = sock
-        self.is_alive = False
-
-    def process_message(self, msg):
-        pass
-
-    def poll(self):
-        self.is_alive = True
-        while True:
-            if not self.is_alive:
-                break
-            try:
-                # получаем данные
-                data = jim.JIM.get_message(self.sock)
-                # если сообщение
-                if data.get('action'):
-                    self.process_message(data)
-                # если респонсе, то в очередь
-                else:
-                    self.request_queue.put(data)
-            except Exception as e:
-                print(e)
-
-    def stop(self):
-        self.is_alive = False
-
-
-class ConsoleReciever(Receiver):
-    """Консольный обработчик входящих сообщений"""
-
-    def process_message(self, message):
-        try:
-            action = message['action']
-            time_point = message['time']
-            t = time_point[11:]
-            if action == 'msg':
-                text = message['message']
-                name = message['from']
-                print(f'\n[{t} от {name}]: {text}')
-            elif action == 'quit':
-                name = message['account_name']
-                print(f'\n[{t} {name} покинул чат]')
-        except:
-            pass
 
 
 class User:
@@ -88,39 +41,39 @@ class User:
     def connect(self):
         try:
             self.socket.connect((self.addr, self.port))
-            logger.info(f'Установлено соединение с сервером {addr}:{port})')  #
+            logger.info(f'Установлено соединение с сервером {self.addr}:{self.port})')  #
         except ValueError:
             print('Порт должен быть целым числом')
             sys.exit(0)
         # проба <-
-        server_msg = jim.JIM.get_message(self.socket)
+        server_msg = get_message(self.socket)
         if server_msg['action'] == 'probe':
             logger.info(f'Получен запрос (probe) от сервера (client {self.login})')  #
             # процедура проверки связи с сервером
             self.connect_control()
 
     def create_presence(self):
-        presence = jim.msg.Presence(account_name=self.login, password=self.password).pack()
+        presence = utils.msg.Presence(account_name=self.login, password=self.password).pack()
         return presence
 
     def create_close_msg(self):
-        message = jim.msg.Quit(self.login).pack()
+        message = utils.msg.Quit(self.login).pack()
         return message
 
     def create_message(self, text, to_name):
-        message = jim.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
+        message = utils.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
         return message
 
     def create_add_contact_msg(self, new_frend):
-        message = jim.msg.AddContact(new_frend, action=1).pack()
+        message = utils.msg.AddContact(new_frend, action=1).pack()
         return message
 
     def create_get_contact_msg(self):
-        message = jim.msg.GetContacts().pack()
+        message = utils.msg.GetContacts().pack()
         return message
 
     def create_del_contact_msg(self, del_frend):
-        message = jim.msg.AddContact(del_frend).pack()
+        message = utils.msg.AddContact(del_frend).pack()
         return message
 
     def response_control(self, response_msg):
@@ -139,10 +92,10 @@ class User:
 
         # презентс ->
         presence = self.create_presence()
-        jim.JIM.send_message(socket=self.socket, message=presence)
+        send_message(socket=self.socket, message=presence)
         logger.info(f'Отправлен презент серверу (client {self.login})')  #
         # респонс <-
-        response = jim.JIM.get_message(self.socket)
+        response = get_message(self.socket)
         # респонс <!>
         self.response_control(response)
         return
@@ -160,9 +113,8 @@ class User:
     def get_contacts(self):
         """ Запрашивает список контактов и возвращает их с сод ответа"""
         msg = self.create_get_contact_msg()
-        jim.JIM.send_message(socket=self.socket, message=msg)
+        send_message(socket=self.socket, message=msg)
         logger.info(f'Отправлен запрос "список контактов" (client {self.login})  {msg}')  #
-        # response = jim.JIM.get_message(self.socket)
         response = self.request_queue.get()
         logger.info(f'Получен ответ от сервера {response}')  #
         contacts = response['alert']
@@ -172,9 +124,8 @@ class User:
     def add_contact(self, login):
         # нужна проверка на наличие логина в списке контаков пользователя
         msg = self.create_add_contact_msg(login)
-        jim.JIM.send_message(socket=self.socket, message=msg)
+        send_message(socket=self.socket, message=msg)
         logger.info(f'Отправлен запрос на добавление контакта (client {self.login} {msg})')  #
-        # response = jim.JIM.get_message(self.socket)
         response = self.request_queue.get()
         logger.info(f'Получен ответ от сервера {response}')  #
         return response
@@ -182,18 +133,16 @@ class User:
     def del_contact(self, login):
         # нужна проверка на наличие логина в списке контаков пользователя
         msg = self.create_del_contact_msg(login)
-        jim.JIM.send_message(socket=self.socket, message=msg)
+        send_message(socket=self.socket, message=msg)
         logger.info(f'Отправлен запрос на удаление контакта (client {self.login} {msg})')  #
-        # response = jim.JIM.get_message(self.socket)
         response = self.request_queue.get()
         logger.info(f'Получен ответ от сервера {response}')  #
         return response
 
     def quit_process(self):
         message = self.create_close_msg()
-        jim.JIM.send_message(socket=self.socket, message=message)
+        send_message(socket=self.socket, message=message)
         logger.info(f'Отправлено уведомление о выходе на сервер (client {self.login})  {message}')  #
-        # response = jim.JIM.get_message(self.socket)
         response = self.request_queue.get()
         self.print_response(response)
         logger.info(f'Произведён выход (client {user.login})')  #
@@ -242,7 +191,7 @@ class User:
                     # отправка простого сообщения
                     message = self.create_message(to_name=to_name, text=text)
                     logger.info(f'Отправлено сообщение на сервер (client {self.login})  {message}')  #
-                    jim.JIM.send_message(socket=self.socket, message=message)
+                    send_message(socket=self.socket, message=message)
 
 
 if __name__ == '__main__':
@@ -250,16 +199,20 @@ if __name__ == '__main__':
     try:
         addr = sys.argv[1]
     except IndexError:
-        addr = settings.ADDR
+        addr = utils.settings.ADDR
     try:
         port = int(sys.argv[2])
     except IndexError:
-        port = settings.PORT
+        port = utils.settings.PORT
     except ValueError:
         print('Порт должен быть целым числом')
         sys.exit(0)
+    try:
+        login = str(sys.argv[3])
+    except IndexError:
+        login = 'Пишуший'
 
-    user = User(login='Пишуший', password='2', port=port, addr=addr)
+    user = User(login=login, password='2', port=port, addr=addr)
     user.connect()
 
     listener = ConsoleReciever(user.socket, user.request_queue)
