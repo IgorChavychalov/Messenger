@@ -6,6 +6,7 @@ import jim.JIM
 import jim.msg
 from client import Receiver
 from PyQt5.QtCore import QObject, pyqtSignal
+import settings
 
 
 class GuiReciever(Receiver, QObject):
@@ -38,14 +39,15 @@ class GuiReciever(Receiver, QObject):
 
 
 class UserWindow(QMainWindow):
-    def __init__(self, login, password, parent=None):
+    def __init__(self, login, password, addr, port, parent=None):
         super().__init__(parent)
         self.login = login
         self.password = password
-        self.user = client.User(login=login, password=password)
+        self.user = client.User(login=login, password=password, addr=addr, port=port)
         self.user.connect()
 
         self.w = uic.loadUi('GUI\client.ui', self)
+        self.listener = GuiReciever(self.user.socket, self.user.request_queue)
         self.w.setWindowTitle(self.login)
         self.contacts = []
         self.initUT()
@@ -91,7 +93,7 @@ class UserWindow(QMainWindow):
         self.w.textEditAddContact.setText(name)
 
     def initUT(self):
-        self.refresh_contacts()  # получаем контакты
+        # self.refresh_contacts()  # получаем контакты
         self.w.pushButtonAddContact.clicked.connect(self.add_contact)
         self.w.pushButtonOpenChat.clicked.connect(self.open_chat)
         self.w.pushButtonDelContact.clicked.connect(self.del_contact)
@@ -138,6 +140,8 @@ class Chat(Qt.QWidget):
 if __name__ == '__main__':
     login = 'Пишуший'
     password = '2'
+    port = settings.PORT
+    addr = settings.ADDR
     app = QApplication(sys.argv)
-    ex = UserWindow(login=login, password=password)
+    ex = UserWindow(login=login, password=password, addr=addr, port=port)
     sys.exit(app.exec_())
