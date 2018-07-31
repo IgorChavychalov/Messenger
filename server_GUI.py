@@ -5,6 +5,7 @@ from base.server_query import BaseQuery
 from base.server_db import session
 import server
 
+
 class ServerWindow(QMainWindow):
     # связь с дизайном
     def __init__(self, parent=None):
