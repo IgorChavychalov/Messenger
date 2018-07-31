@@ -1,12 +1,13 @@
 import sys
 from PyQt5 import uic, Qt, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication
-import client
-import jim.JIM
-import jim.msg
-from client import Receiver
 from PyQt5.QtCore import QObject, pyqtSignal
-import settings
+# собственные модули
+import client
+import utils.JIM
+import utils.msg
+import utils.settings
+from utils.receivers import Receiver
 
 
 class GuiReciever(Receiver, QObject):
@@ -116,7 +117,7 @@ class Chat(Qt.QWidget):
         try:
             text = self.chat.textEdit.toPlainText()
             msg = self.create_message(text=text, to_name=self.login)
-            jim.JIM.send_message(socket=self.socket, message=msg)
+            utils.JIM.send_message(socket=self.socket, message=msg)
             self.chat.textEdit.clear()
             self.print_msg(msg)
         except Exception as e:
@@ -130,7 +131,7 @@ class Chat(Qt.QWidget):
         self.chat.textBrowser.append(text)
 
     def create_message(self, text, to_name):
-        message = jim.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
+        message = utils.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
         return message
 
     def initUI(self):
@@ -140,8 +141,8 @@ class Chat(Qt.QWidget):
 if __name__ == '__main__':
     login = 'Пишуший'
     password = '2'
-    port = settings.PORT
-    addr = settings.ADDR
+    port = utils.settings.PORT
+    addr = utils.settings.ADDR
     app = QApplication(sys.argv)
     ex = UserWindow(login=login, password=password, addr=addr, port=port)
     sys.exit(app.exec_())
