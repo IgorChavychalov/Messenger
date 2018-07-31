@@ -1,10 +1,10 @@
 import pytest
-import jim.msg
+import utils.msg
 
 
 class TestPresence:
     def setup(self):
-        self.presence = jim.msg.Presence('Name', 'Password')
+        self.presence = utils.msg.Presence('Name', 'Password')
 
     def test_init(self):
         assert self.presence.account_name == 'Name'
@@ -25,7 +25,7 @@ class TestPresence:
 
 class TestProb:
     def setup(self):
-        self.probe = jim.msg.Probe()
+        self.probe = utils.msg.Probe()
 
     def test_pack(self):
         pack = self.probe.pack()
@@ -34,7 +34,7 @@ class TestProb:
 
 class TestQuit:
     def setup(self):
-        self.quit = jim.msg.Quit('на')
+        self.quit = utils.msg.Quit('на')
 
     def test_pack(self):
         pack = self.quit.pack()
@@ -43,8 +43,8 @@ class TestQuit:
 
 class TestResponse:
     def setup(self):
-        self.response_ok = jim.msg.Response(cod=200, alert='OK')
-        self.response_no = jim.msg.Response(cod=400, alert='NOT OK')
+        self.response_ok = utils.msg.Response(cod=200, alert='OK')
+        self.response_no = utils.msg.Response(cod=400, alert='NOT OK')
 
     def test_pack_ok(self):
         pack = self.response_ok.pack()
@@ -59,7 +59,7 @@ class TestResponse:
 
 class TestMessage:
     def setup(self):
-        self.message = jim.msg.Message(msg='Привет', from_name='Я', to_name='Этому')
+        self.message = utils.msg.Message(msg='Привет', from_name='Я', to_name='Этому')
 
     def test_init(self):
         assert self.message.msg == 'Привет'
@@ -76,8 +76,8 @@ class TestMessage:
 
 class TestChat:
     def setup(self):
-        self.chat_join = jim.msg.Chat(room_name='1', action=1)
-        self.chat_leave = jim.msg.Chat(room_name='1')
+        self.chat_join = utils.msg.Chat(room_name='1', action=1)
+        self.chat_leave = utils.msg.Chat(room_name='1')
 
     def test_init(self):
         assert self.chat_join.room_name == '1'
@@ -98,7 +98,7 @@ class TestChat:
 
 class TestAddContact:
     def setup(self):
-        self.add_contact = jim.msg.AddContact('Второй')
+        self.add_contact = utils.msg.AddContact('Второй')
 
     def test_init(self):
         assert self.add_contact.new_frend == 'Второй'
