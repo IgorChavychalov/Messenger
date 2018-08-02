@@ -1,7 +1,7 @@
 import sys
-from PyQt5 import uic, Qt, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5 import uic
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
 # собственные модули
 import client
 import utils.JIM
@@ -30,8 +30,14 @@ class GuiReciever(Receiver, QObject):
         """Обработка сообщения"""
         # Генерируем сигнал (сообщаем, что произошло событие)
         # В скобках передаем нужные нам данные
-        text = '{} >>> {}'.format(message.from_, message.message)
-        self.gotData.emit(text)
+        action = message['action']
+        time_point = message['time']
+        t = time_point[11:]
+        if action == 'msg':
+            msg = message['message']
+            name = message['from']
+            text = (f'[{t} от {name}]: {msg}')
+            self.gotData.emit(text)
 
     def poll(self):
         super().poll()
@@ -40,6 +46,7 @@ class GuiReciever(Receiver, QObject):
 
 
 class UserWindow(QMainWindow):
+
     def __init__(self, login, password, addr, port, parent=None):
         super().__init__(parent)
         self.login = login
@@ -48,15 +55,34 @@ class UserWindow(QMainWindow):
         self.user.connect()
 
         self.w = uic.loadUi('GUI\client.ui', self)
-        self.listener = GuiReciever(self.user.socket, self.user.request_queue)
         self.w.setWindowTitle(self.login)
-        self.contacts = []
+        # создаём рессивер для перехвата
+        self.listener = GuiReciever(self.user.socket, self.user.request_queue)
+        # создаём поток
+        self.listener.gotData.connect(self.update_chat)
+        self.th = QThread()
+        # ????
+        self.listener.moveToThread(self.th)
+        # связываем поток с рессивером при приеме данных
+        self.th.started.connect(self.listener.poll)
+        # запускаем поток
+        self.th.start()
         self.initUT()
 
     def set_contacts(self):
         self.w.listWidgetContacts.clear()
         for contact in self.contacts:
             self.w.listWidgetContacts.addItem(str(contact))
+
+    @pyqtSlot(str)
+    def update_chat(self, data):
+        ''' Отображение сообщения в истории
+        '''
+        try:
+            msg = data
+            self.w.listWidgetMsg.addItem(msg)
+        except Exception as e:
+            print(e)
 
     def refresh_contacts(self):
         self.contacts = self.user.get_contacts()[1]
@@ -94,7 +120,7 @@ class UserWindow(QMainWindow):
         self.w.textEditAddContact.setText(name)
 
     def initUT(self):
-        # self.refresh_contacts()  # получаем контакты
+        self.refresh_contacts()  # получаем контакты
         self.w.pushButtonAddContact.clicked.connect(self.add_contact)
         self.w.pushButtonOpenChat.clicked.connect(self.open_chat)
         self.w.pushButtonDelContact.clicked.connect(self.del_contact)
@@ -102,7 +128,7 @@ class UserWindow(QMainWindow):
         self.show()
 
 
-class Chat(Qt.QWidget):
+class Chat(QWidget):
     def __init__(self, socket, login):
         super().__init__()
         self.socket = socket
@@ -112,6 +138,7 @@ class Chat(Qt.QWidget):
         self.chat.setWindowTitle('Общий чат')
 
         self.initUI()
+
 
     def send_msg(self):
         try:
