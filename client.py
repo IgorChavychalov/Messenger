@@ -221,4 +221,3 @@ if __name__ == '__main__':
     th_listen.start()
     user.update_contacts()
     user.write_massage('всем')
-
