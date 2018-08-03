@@ -1,48 +1,13 @@
 import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThread
+from PyQt5.QtCore import pyqtSlot, QThread
 # собственные модули
 import client
 import utils.JIM
 import utils.msg
 import utils.settings
-from utils.receivers import Receiver
-
-
-class GuiReciever(Receiver, QObject):
-    """GUI обработчик входящих сообщений"""
-    # мы его наследуюем от QObject чтобы работала модель сигнал слот
-    # можно и не наследовать, но тогда надо передавать объект в который мы будем сообщения выводить
-    # через сигнал слот более гибко т.к. мы можем обработать сигнал как хотим уже внутри gui
-    # событий (сигнал) что пришли данные
-    gotData = pyqtSignal(str)
-    # событие (сигнал) что прием окончен
-    finished = pyqtSignal(int)
-
-    def __init__(self, sock, request_queue):
-        # инициализируем как Receiver
-        Receiver.__init__(self, sock, request_queue)
-        # инициализируем как QObject
-        QObject.__init__(self)
-
-    def process_message(self, message):
-        """Обработка сообщения"""
-        # Генерируем сигнал (сообщаем, что произошло событие)
-        # В скобках передаем нужные нам данные
-        action = message['action']
-        time_point = message['time']
-        t = time_point[11:]
-        if action == 'msg':
-            msg = message['message']
-            name = message['from']
-            text = (f'[{t} от {name}]: {msg}')
-            self.gotData.emit(text)
-
-    def poll(self):
-        super().poll()
-        # Когда обработка событий закончиться сообщаем об этом генерируем сигнал finished
-        self.finished.emit(0)
+from utils.receivers import GuiReciever
 
 
 class UserWindow(QMainWindow):
@@ -138,7 +103,6 @@ class Chat(QWidget):
         self.chat.setWindowTitle('Общий чат')
 
         self.initUI()
-
 
     def send_msg(self):
         try:
