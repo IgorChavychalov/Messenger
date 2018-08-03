@@ -166,10 +166,22 @@ class Chat(QWidget):
 
 
 if __name__ == '__main__':
-    login = 'Пишуший'
-    password = '2'
-    port = utils.settings.PORT
-    addr = utils.settings.ADDR
+    try:
+        addr = sys.argv[1]
+    except IndexError:
+        addr = utils.settings.ADDR
+    try:
+        port = int(sys.argv[2])
+    except IndexError:
+        port = utils.settings.PORT
+    except ValueError:
+        print('Порт должен быть целым числом')
+        sys.exit(0)
+    try:
+        login = str(sys.argv[3])
+    except IndexError:
+        login = 'Пишуший'
+
     app = QApplication(sys.argv)
-    ex = UserWindow(login=login, password=password, addr=addr, port=port)
+    ex = UserWindow(login=login, password='2', addr=addr, port=port)
     sys.exit(app.exec_())
