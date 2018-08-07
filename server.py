@@ -31,12 +31,22 @@ class BaseHandler:
         except LoginIsUsed:
             return logger.error(f'пользователь {login} уже добавлен')
 
-    def save_history(self, msg, ip):
+    def save_visit_history(self, msg, ip):
         """ Запись в таблицу history """
         try:
             login = msg['account_name']
-            self.base_query.add_history(login=login, time_point=msg['time'],
+            self.base_query.add_visit_history(login=login, time_point=msg['time'],
                                         action=msg['action'], address_IP=ip)
+            return logger.info(f'добавлена новый запись в таблицу History: {login}')  #
+        except LoginIsNotInTable:
+            return logger.error(f'не удалось добавить запись в таблицу History: {login}')
+
+    def save_messages_history(self, msg):
+        """ Запись в таблицу history """
+        try:
+            login = msg['from']
+            self.base_query.add_message_history(login=login, time_point=msg['time'],
+                                                text=msg['message'], frend_login=msg['to'])
             return logger.info(f'добавлена новый запись в таблицу History: {login}')  #
         except LoginIsNotInTable:
             return logger.error(f'не удалось добавить запись в таблицу History: {login}')
@@ -75,6 +85,7 @@ class BaseHandler:
             return result
         except LoginHasNoContacts:
             logger.error(f'у {login} нет контактов')
+            return ['нет контактов']
 
 
 class JsonHandler:
@@ -110,7 +121,7 @@ class JsonHandler:
         if action == 'presence':
             # временная мера пока нет аутентификации
             self.base_handler.save_name_from_presentce(name)
-            self.base_handler.save_history(msg=presence, ip=ip)
+            self.base_handler.save_visit_history(msg=presence, ip=ip)
             return 200
         else:
             return 400
@@ -147,13 +158,16 @@ class JsonHandler:
             try:
                 # Получаем входящие сообщения
                 message = get_message(sock)
+                if message.get('action') == 'msg':
+                    self.base_handler.save_messages_history(message)
                 logger.info(f'полученно входящее сообщение {message}')  #
                 messages.append((message, sock))
 
-            except:
+            except Exception as e:
                 logger.info(f'Клиент {sock.fileno()} {sock.getpeername()} отключился')  #
                 print(f'Клиент {sock.fileno()} {sock.getpeername()} отключился')
                 all_clients.remove(sock)
+                print(e)
         # возвращаем список кортежев
         return messages
 
@@ -275,4 +289,8 @@ if __name__ == '__main__':
 
     server = Server(json_handler)
     server.bind(addr, port)
+    try:
+        base_handler.base_query.add_user(login='all')
+    except LoginIsUsed:
+        logger.error(f'пользователь {all} уже добавлен')
     server.listen()
