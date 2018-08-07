@@ -8,6 +8,6 @@ print('Сервер запущен')
 # ждем на всякий пожарный
 time.sleep(2)
 # запускаем 2 клиентов
-Popen('python client_GUI.pyw localhost 8888 Клиент')
-Popen('python client_GUI.pyw localhost 8888 Пациент')
+Popen('python client_GUI.py localhost 8888 Клиент')
+Popen('python client_GUI.py localhost 8888 Пациент')
 print('запущенно 2 клиента')
