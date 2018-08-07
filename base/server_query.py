@@ -1,4 +1,4 @@
-from base.server_db import Users, Contacts, History
+from base.server_db import Users, Contacts, VisitHistory, MessageHistory
 from base.errors import *
 import logging
 # если запрос ни чего не нашёл
@@ -96,26 +96,37 @@ class BaseQuery:
         else:
             raise UsersAreNotFrends(you_login, del_login)
 
-    def user_id_in_history_table(self, user_id):
+    def user_id_in_visit_history_table(self, user_id):
         """ Проверка на наличие ID логина в таблице History """
-        result = self.session.query(History).filter(History.userID == user_id).count()
+        result = self.session.query(VisitHistory).filter(VisitHistory.userID == user_id).count()
         return result
 
-    def get_history(self, login):
+    def get_visit_history(self, login):
         """ НЕОБХОДИМО РЕАЛИЗОВАТЬ ВЫЗОВ ЧЕРЕЗ КРИТЕРИЙ: ДАТА """
         # получаем id и проверяем наличие пользователя
         user = self.get_user(login)
         # проверяем наличие записи для данного ID в History
-        if self.user_id_in_history_table(user.userID):
-            result = self.session.query(History).filter(History.userID == user.userID).first()
+        if self.user_id_in_visit_history_table(user.userID):
+            result = self.session.query(VisitHistory).filter(VisitHistory.userID == user.userID).first()
             return result
         else:
             raise IdIsNotInTable(login=login)
 
-    def add_history(self, login, time_point, address_IP, action):
+    def add_visit_history(self, login, time_point, address_IP, action):
         """ Добавление новый записии в таблице History пользователя """
         user = self.get_user(login)
-        history = History(userID=user.userID, timePoint=time_point,
+        add_history = VisitHistory(userID=user.userID, timePoint=time_point,
                           addressIP=address_IP, action=action)
-        self.session.add(history)
+        self.session.add(add_history)
+        self.session.commit()
+
+    def add_message_history(self, login, time_point, text, frend_login):
+        user = self.get_user(login)
+        if frend_login == 'всем':
+            frend_user = 1
+        else:
+            frend_user = self.get_user(frend_login).userID
+        add_history = MessageHistory(userID=user.userID, timePoint=time_point,
+                                     chat=None, recipientID=frend_user, text=text)
+        self.session.add(add_history)
         self.session.commit()
