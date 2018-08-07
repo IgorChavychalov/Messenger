@@ -69,7 +69,7 @@ class UserWindow(QMainWindow):
 
     def open_chat(self):
         try:
-            self.wc = Chat(socket=self.user.socket, login=self.login)
+            self.wc = Chat(socket=self.user.socket, login=self.login, user=self.user)
         except Exception as e:
             print(e)
 
@@ -94,10 +94,11 @@ class UserWindow(QMainWindow):
 
 
 class Chat(QWidget):
-    def __init__(self, socket, login):
+    def __init__(self, socket, login, user):
         super().__init__()
         self.socket = socket
         self.login = login
+        self.user = user
         self.chat = uic.loadUi('GUI\chat.ui')
         self.chat.show()
         self.chat.setWindowTitle('Общий чат')
@@ -108,6 +109,8 @@ class Chat(QWidget):
         try:
             text = self.chat.textEdit.toPlainText()
             msg = self.create_message(text=text, to_name=self.login)
+            self.user.base.add_message_history(login=self.login, time_point=msg['time'],
+                                                   text=text, frend_login=msg['to'])
             utils.JIM.send_message(socket=self.socket, message=msg)
             self.chat.textEdit.clear()
             self.print_msg(msg)
@@ -144,7 +147,7 @@ if __name__ == '__main__':
     try:
         login = str(sys.argv[3])
     except IndexError:
-        login = 'Пишуший'
+        login = 'Пишущий'
 
     app = QApplication(sys.argv)
     ex = UserWindow(login=login, password='2', addr=addr, port=port)
