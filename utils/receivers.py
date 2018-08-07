@@ -1,5 +1,8 @@
 from .JIM import get_message
 from PyQt5.QtCore import QObject, pyqtSignal
+from base.client_query import ClientQuery
+from base.errors import LoginIsUsed
+from base.client_db import session
 
 
 class Receiver:
@@ -23,6 +26,7 @@ class Receiver:
                 # если сообщение
                 if data.get('action'):
                     self.process_message(data)
+                    ClientQuery(session)
                 # если респонсе, то в очередь
                 else:
                     self.request_queue.put(data)
@@ -48,8 +52,9 @@ class ConsoleReciever(Receiver):
             elif action == 'quit':
                 name = message['account_name']
                 print(f'\n[{t} {name} покинул чат]')
-        except:
-            pass
+        except Exception as e:
+            print(e)
+
 
 class GuiReciever(Receiver, QObject):
     """GUI обработчик входящих сообщений"""
