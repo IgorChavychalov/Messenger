@@ -10,8 +10,10 @@ import utils.settings
 from utils.JIM import get_message, send_message
 from utils.receivers import ConsoleReciever
 import utils.msg
+from base.client_query import ClientQuery
+from base.errors import LoginIsUsed
+from base.client_db import session
 import log.client_log_config
-
 
 
 logger = logging.getLogger('client')
@@ -29,6 +31,7 @@ def print_title(func):
 
 class User:
     def __init__(self, login, password, addr, port):
+        self.base = ClientQuery(session)
         self.login = login
         self.password = password
         self.addr = addr
@@ -190,6 +193,8 @@ class User:
                 if text != '':
                     # отправка простого сообщения
                     message = self.create_message(to_name=to_name, text=text)
+                    self.base.add_message_history(login=message['from'], time_point=message['time'],
+                                                  text=text, frend_login=message['to'])
                     logger.info(f'Отправлено сообщение на сервер (client {self.login})  {message}')  #
                     send_message(socket=self.socket, message=message)
 
@@ -210,7 +215,7 @@ if __name__ == '__main__':
     try:
         login = str(sys.argv[3])
     except IndexError:
-        login = 'Пишуший'
+        login = 'Пишущий'
 
     user = User(login=login, password='2', port=port, addr=addr)
     user.connect()
@@ -219,5 +224,13 @@ if __name__ == '__main__':
     th_listen = Thread(target=listener.poll)
     th_listen.daemon = True
     th_listen.start()
+    try:
+        user.base.add_user(login='all')
+    except LoginIsUsed:
+        logger.info(f'пользователь {all}, уже добавлен')
+    try:
+        user.base.add_user(login=user.login)
+    except LoginIsUsed:
+        logger.info(f'пользователь {all}, уже добавлен')
     user.update_contacts()
-    user.write_massage('всем')
+    user.write_massage('all')
