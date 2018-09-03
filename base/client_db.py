@@ -26,20 +26,22 @@ class MessageHistory(Base):
     __tablename__ = 'MessageHistory'
     MessageHistoryID = Column(Integer, primary_key=True)
     userID = Column(Integer, ForeignKey('Users.userID'))
+    dataPoint = Column(String(50))
     timePoint = Column(String(50))
     chat = Column(String(50))
     recipientID = Column(Integer, ForeignKey('Users.userID'))
     text = Column(String(50))
 
-    def __init__(self, userID, timePoint, chat, recipientID, text):
+    def __init__(self, userID, dataPoint, timePoint, chat, recipientID, text):
         self.userID = userID
+        self.dataPoint = dataPoint
         self.timePoint = timePoint
         self.chat = chat
         self.recipientID = recipientID
         self.text = text
 
     def __repr__(self):
-        return f'<VisitHistory: {self.userID} {self.timePoint} {self.chat} {self.recipientID} {self.text}>'
+        return f'{self.userID} {self.dataPoint} {self.timePoint} {self.recipientID} {self.text}'
 
 
 engine = create_engine(f'sqlite:///{PATH}', echo=False)
