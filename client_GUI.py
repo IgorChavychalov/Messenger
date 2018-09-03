@@ -105,6 +105,18 @@ class Chat(QWidget):
 
         self.initUI()
 
+    def load_history_msg(self, data):
+        try:
+            rows = self.user.base.get_massage_from_history(login=self.login, data=data)
+            for row in rows:
+                r = str(row)
+                id, dp, ch, tp, rs, txt = r.split(' ')
+                login = self.user.base.get_user_from_id(id)
+                form_row = f'[{tp} {login}] {txt}'
+                self.chat.textBrowser.append(form_row)
+        except Exception as e:
+            print(e)
+
     def send_msg(self):
         try:
             text = self.chat.textEdit.toPlainText()
@@ -118,37 +130,42 @@ class Chat(QWidget):
             print(e)
 
     def print_msg(self, msg):
-        alert = msg['message']
-        time_point = msg['time']
-        t = time_point[11:]
-        text = f'[{t} {self.login}] {alert}'
-        self.chat.textBrowser.append(text)
+        try:
+            alert = msg['message']
+            time_point = msg['time']
+            t = time_point[11:]
+            text = f'[{t} {self.login}] {alert}'
+            self.chat.textBrowser.append(text)
+        except Exception as e:
+            print(e)
 
     def create_message(self, text, to_name):
         message = utils.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
         return message
 
     def initUI(self):
+        self.load_history_msg(data='2018-08-27')
         self.chat.pushButtonSend.clicked.connect(self.send_msg)
 
 
-if __name__ == '__main__':
-    try:
-        addr = sys.argv[1]
-    except IndexError:
-        addr = utils.settings.ADDR
-    try:
-        port = int(sys.argv[2])
-    except IndexError:
-        port = utils.settings.PORT
-    except ValueError:
-        print('Порт должен быть целым числом')
-        sys.exit(0)
-    try:
-        login = str(sys.argv[3])
-    except IndexError:
-        login = 'Пишущий'
+try:
+    addr = sys.argv[1]
+except IndexError:
+    addr = utils.settings.ADDR
+try:
+    port = int(sys.argv[2])
+except IndexError:
+    port = utils.settings.PORT
+except ValueError:
+    print('Порт должен быть целым числом')
+    sys.exit(0)
+try:
+    login = str(sys.argv[3])
+except IndexError:
+    login = 'Пишущий'
 
-    app = QApplication(sys.argv)
-    ex = UserWindow(login=login, password='2', addr=addr, port=port)
-    sys.exit(app.exec_())
+app = QApplication(sys.argv)
+ex = UserWindow(login=login, password='2', addr=addr, port=port)
+
+
+sys.exit(app.exec_())
