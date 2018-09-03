@@ -3,7 +3,7 @@ from base.errors import *
 import logging
 # если запрос ни чего не нашёл
 from sqlalchemy.orm.exc import NoResultFound
-logger = logging.getLogger('server')
+logger = logging.getLogger('client')
 
 
 class ClientQuery:
@@ -16,6 +16,13 @@ class ClientQuery:
         result = self.session.query(Users).filter(Users.login == login).count()
         if result > 0:
             return result
+
+    def user_id_in_users_table(self, user_id):
+        """ Проверка на наличие записи в таблице Users """
+        result = self.session.query(Users).filter(Users.userID == user_id).count()
+        if result > 0:
+            return result
+
 
     def add_user(self, login):
         """ Добавление нового логина в БД """
@@ -33,6 +40,31 @@ class ClientQuery:
             return result
         else:
             raise LoginIsNotInTable(login=login)
+
+    def get_user_from_id(self, user_id):
+        """ Вызов логина из БД """
+        if self.user_id_in_users_table(user_id=user_id):
+            result = self.session.query(Users).filter(Users.userID == user_id).one()
+            return result.login
+        else:
+            raise LoginIsNotInTable(login=user_id)
+
+    def get_massage_from_history(self, login, data):
+        """ Возвращвет сообщения за указаную дату """
+        login = self.get_user(login)
+        if login:
+            result = self.session.query(MessageHistory)\
+                .filter(MessageHistory.userID == login.userID)\
+                .filter(MessageHistory.dataPoint == data).all()
+            return result
+        else:
+            raise LoginIsNotInTable(login=login)
+
+
+
+
+
+
     #
     # def get_users(self):
     #     """ Возвращает всех пользователей """
@@ -121,12 +153,19 @@ class ClientQuery:
     #     self.session.commit()
     #
     def add_message_history(self, login, time_point, text, frend_login):
-        user = self.get_user(login)
-        if frend_login == 'всем':
-            frend_user = 1
-        else:
-            frend_user = self.get_user(frend_login).userID
-        add_history = MessageHistory(userID=user.userID, timePoint=time_point,
-                                     chat=None, recipientID=frend_user, text=text)
-        self.session.add(add_history)
-        self.session.commit()
+        try:
+            user = self.get_user(login)
+            data_point = time_point[:10]
+            time_point = time_point[9:]
+            print(data_point)
+            print(time_point)
+            if frend_login == 'всем':
+                frend_user = 1
+            else:
+                frend_user = self.get_user(frend_login).userID
+            add_history = MessageHistory(userID=user.userID, timePoint=time_point, dataPoint=data_point,
+                                         chat=None, recipientID=frend_user, text=text)
+            self.session.add(add_history)
+            self.session.commit()
+        except Exception as e:
+            print(e)
