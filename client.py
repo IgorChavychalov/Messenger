@@ -90,6 +90,12 @@ class User:
             logger.error(f'нет ответа от сервера на презентс (client {self.login})  {alert}')  #
             pass
 
+    def add_user(self):
+        try:
+            self.base.add_user(self.login)
+        except LoginIsUsed:
+            pass
+
     def connect_control(self):
         """ Процедура опроса клиента """
 
@@ -97,6 +103,7 @@ class User:
         presence = self.create_presence()
         send_message(socket=self.socket, message=presence)
         logger.info(f'Отправлен презент серверу (client {self.login})')  #
+        self.add_user()
         # респонс <-
         response = get_message(self.socket)
         # респонс <!>
