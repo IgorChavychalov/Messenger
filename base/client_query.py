@@ -33,6 +33,11 @@ class ClientQuery:
             return result
         else:
             raise LoginIsNotInTable(login=login)
+
+    def get_user_from_id(self, id):
+        result = self.session.query(Users).filter(Users.userID == id).one()
+        return result.login
+
     #
     # def get_users(self):
     #     """ Возвращает всех пользователей """
@@ -119,14 +124,25 @@ class ClientQuery:
     #                       addressIP=address_IP, action=action)
     #     self.session.add(add_history)
     #     self.session.commit()
-    #
+
     def add_message_history(self, login, time_point, text, frend_login):
         user = self.get_user(login)
         if frend_login == 'всем':
             frend_user = 1
         else:
             frend_user = self.get_user(frend_login).userID
-        add_history = MessageHistory(userID=user.userID, timePoint=time_point,
+        data_time = time_point.split(' ')
+        add_history = MessageHistory(userID=user.userID, timePoint=data_time[1], dataPoint=data_time[0],
                                      chat=None, recipientID=frend_user, text=text)
         self.session.add(add_history)
         self.session.commit()
+
+    def get_massage_from_history(self, data):
+        # user = self.get_user(login)
+        # if user:
+            # result = self.session.query(MessageHistory)\
+            #     .filter(MessageHistory.userID == user.userID).filter(MessageHistory.dataPoint == data).all()
+        result = self.session.query(MessageHistory) \
+            .filter(MessageHistory.dataPoint == data).all()
+
+        return result
