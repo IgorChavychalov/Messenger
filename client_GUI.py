@@ -1,12 +1,14 @@
 import sys
-from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget
+from PyQt5 import uic, QtCore
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QFileDialog
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import pyqtSlot, QThread
 # собственные модули
 import client
 import utils.JIM
 import utils.msg
 import utils.settings
+import datetime
 from utils.receivers import GuiReciever
 
 
@@ -44,8 +46,7 @@ class UserWindow(QMainWindow):
         ''' Отображение сообщения в истории
         '''
         try:
-            msg = data
-            self.w.listWidgetMsg.addItem(msg)
+            self.wc.refresh_msg_list()
         except Exception as e:
             print(e)
 
@@ -54,7 +55,7 @@ class UserWindow(QMainWindow):
         self.set_contacts()
 
     def add_contact(self):
-        contact = self.w.textEditAddContact.toPlainText()
+        contact = self.w.lineEditAddContact.text()
         answer = self.user.add_contact(contact)
         if answer['response'] == 201:
             self.refresh_contacts()
@@ -73,8 +74,17 @@ class UserWindow(QMainWindow):
         except Exception as e:
             print(e)
 
+    def open_avatar(self):
+        try:
+            self.fname = QFileDialog.getOpenFileName(self)
+            pixmap = QPixmap(self.fname[0])
+            t = pixmap.scaled(180, 180, QtCore.Qt.KeepAspectRatio)
+            self.w.lblAvatar.setPixmap(t)
+        except Exception as e:
+            print(e)
+
     def del_contact(self):
-        contact = self.w.textEditAddContact.toPlainText()
+        contact = self.w.lineEditAddContact.text()
         answer = self.user.del_contact(contact)
         if answer['response'] == 203:
             self.refresh_contacts()
@@ -82,14 +92,16 @@ class UserWindow(QMainWindow):
 
     def set_item(self):
         name = self.w.listWidgetContacts.currentItem().text()
-        self.w.textEditAddContact.setText(name)
+        self.w.lineEditAddContact.setText(name)
 
     def initUT(self):
         self.refresh_contacts()  # получаем контакты
         self.w.pushButtonAddContact.clicked.connect(self.add_contact)
-        self.w.pushButtonOpenChat.clicked.connect(self.open_chat)
+        #self.w.pushButtonOpenChat.clicked.connect(self.open_chat)
         self.w.pushButtonDelContact.clicked.connect(self.del_contact)
         self.w.listWidgetContacts.itemClicked.connect(self.set_item)
+        self.w.listWidgetContacts.itemDoubleClicked.connect(self.open_chat)
+        self.w.pushButton.clicked.connect(self.open_avatar)
         self.show()
 
 
@@ -107,12 +119,16 @@ class Chat(QWidget):
 
     def load_history_msg(self, data):
         try:
-            rows = self.user.base.get_massage_from_history(login=self.login, data=data)
+            rows = self.user.base.get_massage_from_history(data=data)
+            self.chat.textBrowser.clear()
             for row in rows:
                 r = str(row)
-                id, dp, ch, tp, rs, txt = r.split(' ')
+                id, dp, tp, rs, txt = r.split(' ')
                 login = self.user.base.get_user_from_id(id)
-                form_row = f'[{tp} {login}] {txt}'
+                if not login == self.login:
+                    form_row = f'[{tp} от {login}] \n{txt}'
+                else:
+                    form_row = f'[{tp} Вы] \n{txt}'
                 self.chat.textBrowser.append(form_row)
         except Exception as e:
             print(e)
@@ -120,14 +136,19 @@ class Chat(QWidget):
     def send_msg(self):
         try:
             text = self.chat.textEdit.toPlainText()
+            print(text)
             msg = self.create_message(text=text, to_name=self.login)
             self.user.base.add_message_history(login=self.login, time_point=msg['time'],
                                                    text=text, frend_login=msg['to'])
             utils.JIM.send_message(socket=self.socket, message=msg)
-            self.chat.textEdit.clear()
-            self.print_msg(msg)
+            self.refresh_msg_list()
         except Exception as e:
             print(e)
+
+    def refresh_msg_list(self):
+        self.chat.textEdit.clear()
+        self.load_history_msg(data=str(datetime.date.today()))
+        # self.print_msg(msg)
 
     def print_msg(self, msg):
         try:
@@ -143,9 +164,48 @@ class Chat(QWidget):
         message = utils.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
         return message
 
+
+    # def set_smile(self):
+    #     """ дабовление смайликов в панель и создание связи с действием"""
+    #     smile_src = r'picture_button\smile.jpg'
+    #     smile_name = 'smile'
+    #     self.chat.textEdit.textCursor().insertHtml('<img src="%s" />' % smile_src)
+
+    def set_smile(self):
+        """ дабовление смайликов в панель и создание связи с действием"""
+        smile_src = r'picture_button\smile.jpg'
+        smile_name = 'smile'
+        # создание связи кнопки с действие (лямда для передачи аргмента)
+        self.chat.textEdit.textCursor().insertHtml('<img src="%s" />' % smile_src)
+
+
+    #
+    # def set_format(self, font_src, font_name, toolbar):
+    #     """ дабовление эффектов шрифта в панель и создание связи с действием """
+    #     font = QAction(QIcon(font_src), font_name, self)
+    #     # создание связи кнопки с действие
+    #     tag = font_name[:1]  # используем название файлов до точки ([i].jpg)
+    #     font.triggered.connect(lambda: self.change_font(tag))
+    #     toolbar.addAction(font)
+    #
+    # def change_font(self, tag):
+    #     """ вставить элемент в текст """
+    #     selected_text = self.textEdit.textCursor().selectedText()
+    #     self.textEdit.textCursor().insertHtml(
+    #         '<{tag}>{val}</{tag}>'.format(val=selected_text, tag=tag))
+
     def initUI(self):
-        self.load_history_msg(data='2018-08-27')
+        # ссылки на иконки
+        SMILE_SRC = r'picture_button\smile.jpg'
+        MELANCHOLY_SRC = r'picture_button\melancholy.jpg'
+        BOLT_SRC = r'picture_button\b.jpg'
+        ITALIC_SRC = r'picture_button\i.jpg'
+
+
+        self.chat.btnSmile.clicked.connect(self.set_smile)
+        self.load_history_msg(data=str(datetime.date.today()))
         self.chat.pushButtonSend.clicked.connect(self.send_msg)
+
 
 
 try:
