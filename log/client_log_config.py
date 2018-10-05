@@ -2,7 +2,7 @@ import logging.handlers
 import os
 
 # собственные модули
-from settings import ENCODING
+from utils.settings import ENCODING
 
 # Папка где лежит этот файл
 FOLDER = os.path.dirname(os.path.abspath(__file__)) + '\\files'

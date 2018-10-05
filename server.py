@@ -5,9 +5,9 @@ import sys
 import log.server_log_config
 
 # собственные модули
-import settings
-import jim.msg
-import jim.JIM
+import utils.settings
+import utils.msg
+from utils.JIM import send_message, get_message
 from base.server_query import BaseQuery
 from base.server_db import session
 from base.errors import LoginIsUsed, LoginIsNotInTable, LoginHasNoContacts, \
@@ -31,12 +31,22 @@ class BaseHandler:
         except LoginIsUsed:
             return logger.error(f'пользователь {login} уже добавлен')
 
-    def save_history(self, msg, ip):
+    def save_visit_history(self, msg, ip):
         """ Запись в таблицу history """
         try:
             login = msg['account_name']
-            self.base_query.add_history(login=login, time_point=msg['time'],
+            self.base_query.add_visit_history(login=login, time_point=msg['time'],
                                         action=msg['action'], address_IP=ip)
+            return logger.info(f'добавлена новый запись в таблицу History: {login}')  #
+        except LoginIsNotInTable:
+            return logger.error(f'не удалось добавить запись в таблицу History: {login}')
+
+    def save_messages_history(self, msg):
+        """ Запись в таблицу history """
+        try:
+            login = msg['from']
+            self.base_query.add_message_history(login=login, time_point=msg['time'],
+                                                text=msg['message'], frend_login=msg['to'])
             return logger.info(f'добавлена новый запись в таблицу History: {login}')  #
         except LoginIsNotInTable:
             return logger.error(f'не удалось добавить запись в таблицу History: {login}')
@@ -75,6 +85,7 @@ class BaseHandler:
             return result
         except LoginHasNoContacts:
             logger.error(f'у {login} нет контактов')
+            return ['нет контактов']
 
 
 class JsonHandler:
@@ -110,15 +121,15 @@ class JsonHandler:
         if action == 'presence':
             # временная мера пока нет аутентификации
             self.base_handler.save_name_from_presentce(name)
-            self.base_handler.save_history(msg=presence, ip=ip)
+            self.base_handler.save_visit_history(msg=presence, ip=ip)
             return 200
         else:
             return 400
 
     def create_response(self, cod, alert=0):
         if not alert:
-            alert = settings.alert[cod]
-        message = jim.msg.Response(cod=cod, alert=alert).pack()
+            alert = utils.settings.alert[cod]
+        message = utils.msg.Response(cod=cod, alert=alert).pack()
         return message
 
     def connect_protocol(self, socket, ip):
@@ -127,18 +138,18 @@ class JsonHandler:
         # Связываем ip адрес и сокет
         self.sock_ip[socket] = ip
         # проба ->
-        probe = jim.msg.Probe()
+        probe = utils.msg.Probe()
         probe = probe.pack()
-        jim.JIM.send_message(socket, probe)
+        send_message(socket, probe)
         logger.info(f'отправленна проба на {ip} {probe}')  #
         # пресентс <-
-        presence = jim.JIM.get_message(socket)
+        presence = get_message(socket)
         logger.info(f'получен презентс-сообщение от {ip}  {presence}')  #
         # пресентс <!>
         cod = self.control_presence(presence=presence, ip=ip)
         # респонс ->
         response = self.create_response(cod)
-        jim.JIM.send_message(socket, response)
+        send_message(socket, response)
         logger.info(f'отправлен ответ на презентс {ip}  {response}')  #
 
     def read_requests(self, r_clients, all_clients):
@@ -146,14 +157,17 @@ class JsonHandler:
         for sock in r_clients:
             try:
                 # Получаем входящие сообщения
-                message = jim.JIM.get_message(sock)
+                message = get_message(sock)
+                if message.get('action') == 'msg':
+                    self.base_handler.save_messages_history(message)
                 logger.info(f'полученно входящее сообщение {message}')  #
                 messages.append((message, sock))
 
-            except:
+            except Exception as e:
                 logger.info(f'Клиент {sock.fileno()} {sock.getpeername()} отключился')  #
                 print(f'Клиент {sock.fileno()} {sock.getpeername()} отключился')
                 all_clients.remove(sock)
+                print(e)
         # возвращаем список кортежев
         return messages
 
@@ -167,26 +181,26 @@ class JsonHandler:
                     action = message['action']
                     if action == 'msg':
                         if sock != sock_send:  # broadcast send ===========>
-                            jim.JIM.send_message(sock, message)
+                            send_message(sock, message)
                             logger.info(f'сообщение отправленно {message} на сокет {sock}')  #
                     elif action == 'quit':
                         logger.info(f'полученно уведомление о выходе от {name} от сокета {sock}')  #
                         if sock != sock_send:  # broadcast send ===========>
-                            jim.JIM.send_message(sock, message)
+                            send_message(sock, message)
                             logger.info(f'отправленно уведомление о выходе {name} на сокет {sock}')  #
                         else:  # отправка ответа на запрос
                             # добавить запись в таблицу History
                             self.base_handler.save_history(msg=message, ip=ip)
                             response = self.create_response(cod=202)
                             # unicast send ----------->
-                            jim.JIM.send_message(sock_send,  response)
+                            send_message(sock_send,  response)
                             logger.info(f'отправлен ответ на запрос {message} на сокет {sock}') #
                     elif action == 'get_contacts' and sock == sock_send:
                         logger.info(f'получен запрос на список контактов от сокета {sock}')  #
                         contacts = self.base_handler.get_contacts_list(name)
                         response = self.create_response(cod=200, alert=contacts)
                         # unicast send ------------>
-                        jim.JIM.send_message(sock_send, response)
+                        send_message(sock_send, response)
                         logger.info(f'отправлен ответ на запрос {message} на сокет {sock}')  #
                     elif action == 'add_contact' and sock == sock_send:
                         logger.info(f'получен запрос на добавление контакта от сокета {sock}')  #
@@ -194,7 +208,7 @@ class JsonHandler:
                         cod = self.create_new_contact(msg=message, name=name)
                         response = self.create_response(cod=cod)
                         # unicast send ------------>
-                        jim.JIM.send_message(sock_send, response)
+                        send_message(sock_send, response)
                         logger.info(f'отправлен ответ на запрос {message} на сокет {sock}')  #
                     elif action == 'del_contact' and sock == sock_send:
                         logger.info(f'получен запрос на добавление контакта от сокета {sock}')  #
@@ -202,7 +216,7 @@ class JsonHandler:
                         cod = self.create_del_contact(msg=message, name=name)
                         response = self.create_response(cod=cod)
                         # unicast send ------------>
-                        jim.JIM.send_message(sock_send, response)
+                        send_message(sock_send, response)
                         logger.info(f'отправлен ответ на запрос {message} на сокет {sock}')  #
 
                 except:  # Сокет недоступен, клиент отключился
@@ -261,11 +275,11 @@ if __name__ == '__main__':
     try:
         addr = sys.argv[1]
     except IndexError:
-        addr = settings.ADDR
+        addr = utils.settings.ADDR
     try:
         port = int(sys.argv[2])
     except IndexError:
-        port = settings.PORT
+        port = utils.settings.PORT
     except ValueError:
         print('Порт должен быть целым числом')
         sys.exit(0)
@@ -275,4 +289,8 @@ if __name__ == '__main__':
 
     server = Server(json_handler)
     server.bind(addr, port)
+    try:
+        base_handler.base_query.add_user(login='all')
+    except LoginIsUsed:
+        logger.error(f'пользователь {all} уже добавлен')
     server.listen()

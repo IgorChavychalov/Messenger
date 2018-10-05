@@ -25,9 +25,9 @@ class Users(Base):
         return f'<Users: {self.userID} : {self.login} : {self.info}>'
 
 
-class History(Base):
-    __tablename__ = 'History'
-    historyID = Column(Integer, primary_key=True)
+class VisitHistory(Base):
+    __tablename__ = 'VisitHistory'
+    VisitHistoryID = Column(Integer, primary_key=True)
     userID = Column(Integer, ForeignKey('Users.userID'))
     timePoint = Column(String(50))
     addressIP = Column(String)
@@ -40,7 +40,7 @@ class History(Base):
         self.action = action
 
     def __repr__(self):
-        return f'<History: {self.userID} {self.timePoint} {self.addressIP} {self.action}>'
+        return f'<VisitHistory: {self.userID} {self.timePoint} {self.addressIP} {self.action}>'
 
 
 class Contacts(Base):
@@ -55,6 +55,26 @@ class Contacts(Base):
 
     def __repr__(self):
         return f'{self.userID} - {self.frendID}'
+
+
+class MessageHistory(Base):
+    __tablename__ = 'MessageHistory'
+    MessageHistoryID = Column(Integer, primary_key=True)
+    userID = Column(Integer, ForeignKey('Users.userID'))
+    timePoint = Column(String(50))
+    chat = Column(String(50))
+    recipientID = Column(Integer, ForeignKey('Users.userID'))
+    text = Column(String(50))
+
+    def __init__(self, userID, timePoint, chat, recipientID, text):
+        self.userID = userID
+        self.timePoint = timePoint
+        self.chat = chat
+        self.recipientID = recipientID
+        self.text = text
+
+    def __repr__(self):
+        return f'<VisitHistory: {self.userID} {self.timePoint} {self.chat} {self.recipientID} {self.text}>'
 
 
 engine = create_engine(f'sqlite:///{PATH}', echo=False)

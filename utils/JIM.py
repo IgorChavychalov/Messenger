@@ -1,7 +1,7 @@
 # сторонние модули
 import json
 # собственные модули
-from settings import ENCODING
+from .settings import ENCODING
 
 
 def dict_to_bytes(message_dict):

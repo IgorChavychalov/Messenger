@@ -48,4 +48,11 @@ class ContactIsExist(Exception):
     def __str__(self):
         return f'<Contact {self.user} - {self.frend} is Exist'
 
+class UsersHasNotMessages(Exception):
+    def __init__(self, user, data):
+        self.user = user
+        self.data = data
+
+    def __str__(self):
+        return f'{self.user} has not Messages in {data}'
 # АНГЛИЙСКИЙ ЗАСТРЕЛИЛСЯ

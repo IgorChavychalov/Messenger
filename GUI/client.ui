@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>233</width>
+    <width>463</width>
     <height>628</height>
    </rect>
   </property>
@@ -144,13 +144,23 @@
      <string>Добавление (удаление) контакта</string>
     </property>
    </widget>
+   <widget class="QListWidget" name="listWidgetMsg">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>170</y>
+      <width>211</width>
+      <height>341</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>233</width>
+     <width>463</width>
      <height>26</height>
     </rect>
    </property>
