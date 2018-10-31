@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QFileDialog
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QColor
 from PyQt5.QtCore import pyqtSlot, QThread
 # собственные модули
 import client
@@ -104,7 +104,6 @@ class UserWindow(QMainWindow):
         self.w.pushButton.clicked.connect(self.open_avatar)
         self.show()
 
-
 class Chat(QWidget):
     def __init__(self, socket, login, user):
         super().__init__()
@@ -121,22 +120,31 @@ class Chat(QWidget):
         try:
             rows = self.user.base.get_massage_from_history(data=data)
             self.chat.textBrowser.clear()
-            for row in rows:
-                r = str(row)
-                id, dp, tp, rs, txt = r.split(' ')
-                login = self.user.base.get_user_from_id(id)
-                if not login == self.login:
-                    form_row = f'[{tp} от {login}] \n{txt}'
-                else:
-                    form_row = f'[{tp} Вы] \n{txt}'
-                self.chat.textBrowser.append(form_row)
+            if rows:
+                for row in rows:
+                    login_id = row.userID
+                    login = self.user.base.get_user_from_id(login_id)
+                    time_p = row.timePoint
+                    res = row.recipientID
+                    txt = row.text
+
+                    if not login == self.login:
+                        form_row = f'[{time_p} от {login}] '
+                        self.chat.textBrowser.append(form_row)
+                        self.chat.textBrowser.insertHtml(txt)
+                    else:
+                        form_row = f'[{time_p}] '
+                        self.chat.textBrowser.setTextColor(QColor("green"))
+                        self.chat.textBrowser.append(form_row)
+                        self.chat.textBrowser.insertHtml(f"<div><font color=\"green\">{txt}</font></div>")
+                        self.chat.textBrowser.setTextColor(QColor("black"))
+                    self.chat.textBrowser.ensureCursorVisible()
         except Exception as e:
             print(e)
 
     def send_msg(self):
         try:
-            text = self.chat.textEdit.toPlainText()
-            print(text)
+            text = self.chat.textEdit.toHtml()
             msg = self.create_message(text=text, to_name=self.login)
             self.user.base.add_message_history(login=self.login, time_point=msg['time'],
                                                    text=text, frend_login=msg['to'])
@@ -148,22 +156,10 @@ class Chat(QWidget):
     def refresh_msg_list(self):
         self.chat.textEdit.clear()
         self.load_history_msg(data=str(datetime.date.today()))
-        # self.print_msg(msg)
-
-    def print_msg(self, msg):
-        try:
-            alert = msg['message']
-            time_point = msg['time']
-            t = time_point[11:]
-            text = f'[{t} {self.login}] {alert}'
-            self.chat.textBrowser.append(text)
-        except Exception as e:
-            print(e)
 
     def create_message(self, text, to_name):
         message = utils.msg.Message(msg=text, from_name=self.login, to_name=to_name).pack()
         return message
-
 
     # def set_smile(self):
     #     """ дабовление смайликов в панель и создание связи с действием"""
@@ -171,15 +167,16 @@ class Chat(QWidget):
     #     smile_name = 'smile'
     #     self.chat.textEdit.textCursor().insertHtml('<img src="%s" />' % smile_src)
 
-    def set_smile(self):
-        """ дабовление смайликов в панель и создание связи с действием"""
+    def set_smile(self, src):
         smile_src = r'picture_button\smile.jpg'
-        smile_name = 'smile'
         # создание связи кнопки с действие (лямда для передачи аргмента)
         self.chat.textEdit.textCursor().insertHtml('<img src="%s" />' % smile_src)
 
+    def set_melancholy(self, src):
+        smile_src = r'picture_button\melancholy.jpg'
+        # создание связи кнопки с действие (лямда для передачи аргмента)
+        self.chat.textEdit.textCursor().insertHtml('<img src="%s" />' % smile_src)
 
-    #
     # def set_format(self, font_src, font_name, toolbar):
     #     """ дабовление эффектов шрифта в панель и создание связи с действием """
     #     font = QAction(QIcon(font_src), font_name, self)
@@ -201,12 +198,10 @@ class Chat(QWidget):
         BOLT_SRC = r'picture_button\b.jpg'
         ITALIC_SRC = r'picture_button\i.jpg'
 
-
         self.chat.btnSmile.clicked.connect(self.set_smile)
+        self.chat.btnMelancholy.clicked.connect(self.set_melancholy)
         self.load_history_msg(data=str(datetime.date.today()))
         self.chat.pushButtonSend.clicked.connect(self.send_msg)
-
-
 
 try:
     addr = sys.argv[1]
@@ -226,6 +221,5 @@ except IndexError:
 
 app = QApplication(sys.argv)
 ex = UserWindow(login=login, password='2', addr=addr, port=port)
-
 
 sys.exit(app.exec_())
