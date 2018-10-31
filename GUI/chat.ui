@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>313</width>
-    <height>678</height>
+    <width>381</width>
+    <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
       <item>
        <widget class="QPushButton" name="btnMelancholy">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -168,7 +168,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>313</width>
+     <width>381</width>
      <height>26</height>
     </rect>
    </property>
