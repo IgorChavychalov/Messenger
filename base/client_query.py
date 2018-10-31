@@ -38,7 +38,6 @@ class ClientQuery:
         result = self.session.query(Users).filter(Users.userID == id).one()
         return result.login
 
-    #
     # def get_users(self):
     #     """ Возвращает всех пользователей """
     #     return self.session.query(Users).all()
@@ -143,6 +142,6 @@ class ClientQuery:
             # result = self.session.query(MessageHistory)\
             #     .filter(MessageHistory.userID == user.userID).filter(MessageHistory.dataPoint == data).all()
         result = self.session.query(MessageHistory) \
-            .filter(MessageHistory.dataPoint == data).all()
+            .filter(MessageHistory.dataPoint == data)
 
         return result
